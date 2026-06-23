@@ -60,6 +60,23 @@ create table profiles (
 create trigger trg_profiles_updated before update on profiles
   for each row execute function set_updated_at();
 
+-- Auto-create a profile row whenever a new auth user signs up (default role
+-- 'parent'; elevate to coach/admin/director manually). See auth-trigger.sql
+-- for the standalone version + backfill.
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, role, full_name)
+  values (new.id, 'parent', coalesce(new.raw_user_meta_data->>'full_name', ''))
+  on conflict (id) do nothing;
+  return new;
+end; $$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
 -- ----------------------------------------------------------------------------
 -- families
 -- ----------------------------------------------------------------------------

@@ -2,27 +2,32 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/Logo";
 
-export default function LoginPage() {
+export default function ResetPasswordPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
+    if (password !== confirm) {
+      setError("Passwords don't match.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
       setError(error.message);
@@ -41,7 +46,9 @@ export default function LoginPage() {
       >
         <div className="mb-6 flex flex-col items-center">
           <Logo size={56} />
-          <h1 className="mt-3 text-xl font-bold text-nova-deep">Log in</h1>
+          <h1 className="mt-3 text-xl font-bold text-nova-deep">
+            Choose a new password
+          </h1>
         </div>
 
         {error && (
@@ -51,24 +58,26 @@ export default function LoginPage() {
         )}
 
         <label className="mb-1 block text-sm font-medium text-nova-deep">
-          Email
-        </label>
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-nova-violet focus:outline-none"
-        />
-
-        <label className="mb-1 block text-sm font-medium text-nova-deep">
-          Password
+          New password
         </label>
         <input
           type="password"
           required
+          minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          className="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-nova-violet focus:outline-none"
+        />
+
+        <label className="mb-1 block text-sm font-medium text-nova-deep">
+          Confirm new password
+        </label>
+        <input
+          type="password"
+          required
+          minLength={8}
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
           className="mb-6 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-nova-violet focus:outline-none"
         />
 
@@ -77,24 +86,8 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full rounded-lg bg-nova-deep py-2.5 font-semibold text-white transition hover:bg-nova-violet disabled:opacity-60"
         >
-          {loading ? "Signing in…" : "Log in"}
+          {loading ? "Saving…" : "Update password"}
         </button>
-
-        <p className="mt-3 text-center text-sm">
-          <Link
-            href="/forgot-password"
-            className="font-semibold text-nova-violet"
-          >
-            Forgot password?
-          </Link>
-        </p>
-
-        <p className="mt-2 text-center text-sm text-gray-600">
-          No account?{" "}
-          <Link href="/signup" className="font-semibold text-nova-violet">
-            Create one
-          </Link>
-        </p>
       </form>
     </main>
   );
