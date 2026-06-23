@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --nova-purple: #9682eb;
+  --nova-deep: #4d1f84;
+  --nova-violet: #5a1fb7;
+  --nova-sky: #b9e7fe;
+}
+
+body {
+  color: #111;
+  background: #fff;
+}
