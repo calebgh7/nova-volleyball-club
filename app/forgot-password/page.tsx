@@ -22,7 +22,13 @@ export default function ForgotPasswordPage() {
     });
 
     if (error) {
-      setError(error.message);
+      console.error("resetPasswordForEmail error:", error);
+      const msg = (error.message || "").trim();
+      setError(
+        msg && msg !== "{}"
+          ? msg
+          : "We couldn't send the reset email. The email service may not be set up correctly yet — please try again shortly or contact the club."
+      );
       setLoading(false);
       return;
     }
